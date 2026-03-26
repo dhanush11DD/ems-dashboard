@@ -55,7 +55,7 @@ export function useFlowSimulation() {
         const thresholds = FLOW_THRESHOLDS.flowRate;
         let severity: Alarm['severity'] = 'info';
         let message = 'Flow rate update';
-        let threshold = thresholds.normal;
+        let threshold: number = thresholds.normal;
 
         if (flowRate > thresholds.critical) {
           severity = 'critical';
