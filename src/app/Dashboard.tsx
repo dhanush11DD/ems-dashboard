@@ -1,11 +1,14 @@
 "use client";
 import { useState, useEffect } from 'react';
-import { Activity, Zap, Wind, Power, AlertTriangle, CheckCircle, WifiOff, Wifi } from 'lucide-react';
+import { Activity, Zap, Wind, Power, AlertTriangle, CheckCircle, WifiOff, Wifi, ChevronDown, MapPin } from 'lucide-react';
 import sampleData from '@/constants/sampleData';
 
 const ATMDashboard = () => {
   const [currentTime, setCurrentTime] = useState(new Date());
-  const [data, setData] = useState(sampleData);
+  const [selectedSiteIndex, setSelectedSiteIndex] = useState(0);
+  const [isSelectorOpen, setIsSelectorOpen] = useState(false);
+
+  const data = sampleData[selectedSiteIndex];
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
@@ -37,6 +40,16 @@ const ATMDashboard = () => {
     return colors[status?.toLowerCase()] || 'bg-gray-500/20 border-gray-500/50';
   };
 
+  const getStatusDot = (status: string) => {
+    const colors: { [key: string]: string } = {
+      'online': 'bg-green-400',
+      'offline': 'bg-red-400',
+      'warning': 'bg-yellow-400',
+      'error': 'bg-red-400',
+    };
+    return colors[status?.toLowerCase()] || 'bg-gray-400';
+  };
+
   return (
     <div className="min-h-screen bg-linear-to-br from-gray-900 via-black to-gray-900 text-gray-100 p-3 sm:p-4 md:p-6">
       {/* Header */}
@@ -58,6 +71,56 @@ const ATMDashboard = () => {
               {currentTime.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
             </div>
           </div>
+        </div>
+
+        {/* Site Selector */}
+        <div className="mb-3 sm:mb-4 relative">
+          <button
+            onClick={() => setIsSelectorOpen(!isSelectorOpen)}
+            className="w-full bg-linear-to-r from-gray-800/70 to-gray-900/70 border border-cyan-500/30 rounded-lg p-3 sm:p-4 backdrop-blur-sm flex items-center justify-between hover:border-cyan-500/60 transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-cyan-500/20 border border-cyan-500/30 rounded-lg flex items-center justify-center">
+                <MapPin className="w-4 h-4 sm:w-5 sm:h-5 text-cyan-400" />
+              </div>
+              <div className="text-left">
+                <div className="text-xs text-gray-400 uppercase tracking-wider">Selected Site</div>
+                <div className="text-white font-semibold text-sm sm:text-base">
+                  {data.location.atm_id} — {data.bank_details.bank_name}
+                </div>
+              </div>
+              <div className={`ml-2 w-2.5 h-2.5 rounded-full ${getStatusDot(data.site_status.overall_status)} ${data.site_status.overall_status === 'online' ? 'animate-pulse' : ''}`}></div>
+            </div>
+            <ChevronDown className={`w-5 h-5 text-gray-400 transition-transform ${isSelectorOpen ? 'rotate-180' : ''}`} />
+          </button>
+
+          {isSelectorOpen && (
+            <div className="absolute z-50 w-full mt-2 bg-gray-900/95 border border-cyan-500/30 rounded-lg backdrop-blur-md shadow-2xl shadow-black/50 overflow-hidden">
+              {sampleData.map((site, index) => (
+                <button
+                  key={site.variant_id}
+                  onClick={() => {
+                    setSelectedSiteIndex(index);
+                    setIsSelectorOpen(false);
+                  }}
+                  className={`w-full text-left p-3 sm:p-4 flex items-center justify-between hover:bg-cyan-500/10 transition-colors border-b border-gray-800/50 last:border-b-0 ${
+                    index === selectedSiteIndex ? 'bg-cyan-500/10' : ''
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`w-2.5 h-2.5 rounded-full ${getStatusDot(site.site_status.overall_status)} ${site.site_status.overall_status === 'online' ? 'animate-pulse' : ''}`}></div>
+                    <div>
+                      <div className="text-white font-semibold text-sm">{site.location.atm_id}</div>
+                      <div className="text-gray-400 text-xs">{site.bank_details.bank_name} — {site.location.address}</div>
+                    </div>
+                  </div>
+                  <span className={`text-xs px-2 py-1 rounded uppercase font-semibold ${getStatusBg(site.site_status.overall_status)}`}>
+                    {site.site_status.overall_status}
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Location Bar */}
@@ -171,9 +234,9 @@ const ATMDashboard = () => {
                     </span>
                   </div>
                   <div className="w-full bg-gray-800 rounded-full h-2">
-                    <div 
-                      className="h-2 rounded-full"
-                      style={{ 
+                    <div
+                      className="h-2 rounded-full transition-all duration-500"
+                      style={{
                         width: `${(voltage / 250) * 100}%`,
                         background: `linear-gradient(to right, ${gradientColors[idx].from}, ${gradientColors[idx].to})`
                       }}
@@ -212,9 +275,9 @@ const ATMDashboard = () => {
                     </span>
                   </div>
                   <div className="w-full bg-gray-800 rounded-full h-2">
-                    <div 
-                      className="h-2 rounded-full"
-                      style={{ 
+                    <div
+                      className="h-2 rounded-full transition-all duration-500"
+                      style={{
                         width: `${(current / 15) * 100}%`,
                         background: `linear-gradient(to right, ${gradientColors[idx].from}, ${gradientColors[idx].to})`
                       }}
